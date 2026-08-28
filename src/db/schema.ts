@@ -24,6 +24,7 @@ export const EventsTable = sqliteTable('events', {
   eventLocation: text('event_location'),
   status: text('status').notNull().default('upcoming'),
   maxParticipants: integer('max_participants'),
+  requireDiscord: integer('require_discord', { mode: 'boolean' }).notNull().default(false),
   customFields: text('custom_fields', { mode: 'json' }),
   createdBy: integer('created_by').notNull().references(() => UsersTable.id),
   createdAt: text('created_at').notNull().default(sql`(current_timestamp)`),

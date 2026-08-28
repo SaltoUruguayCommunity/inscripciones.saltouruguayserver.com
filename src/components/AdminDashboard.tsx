@@ -10,6 +10,7 @@ export interface Event {
   eventLocation: string | null;
   status: string;
   maxParticipants: number | null;
+  requireDiscord: boolean;
   customFields: CustomField[] | null;
   createdBy: number;
   createdAt: string;
@@ -54,6 +55,7 @@ export default function AdminDashboard({ events: initialEvents, totalInscription
   const [eventLocation, setEventLocation] = useState("");
   const [status, setStatus] = useState("upcoming");
   const [maxParticipants, setMaxParticipants] = useState("");
+  const [requireDiscord, setRequireDiscord] = useState(false);
   const [customFields, setCustomFields] = useState<CustomField[]>([]);
 
   const handleCoverUpload = async (e: Event) => {
@@ -109,6 +111,7 @@ export default function AdminDashboard({ events: initialEvents, totalInscription
     setEventLocation("");
     setStatus("upcoming");
     setMaxParticipants("");
+    setRequireDiscord(false);
     setCustomFields([]);
     setEditingEvent(null);
     setShowForm(false);
@@ -124,6 +127,7 @@ export default function AdminDashboard({ events: initialEvents, totalInscription
     setEventLocation(event.eventLocation || "");
     setStatus(event.status);
     setMaxParticipants(event.maxParticipants?.toString() || "");
+    setRequireDiscord(event.requireDiscord || false);
     setCustomFields(event.customFields || []);
     setShowForm(true);
   };
@@ -166,6 +170,7 @@ export default function AdminDashboard({ events: initialEvents, totalInscription
         eventLocation: eventLocation || null,
         status,
         maxParticipants: maxParticipants ? Number(maxParticipants) : null,
+        requireDiscord,
         customFields: validFields.length > 0 ? validFields : null,
       };
 
@@ -352,6 +357,15 @@ export default function AdminDashboard({ events: initialEvents, totalInscription
               <div>
                 <label class={labelClass}>Máx. Participantes</label>
                 <input type="number" value={maxParticipants} onInput={(e) => setMaxParticipants((e.target as HTMLInputElement).value)} min="1" class={inputClass} placeholder="Sin límite" />
+              </div>
+              <div class="sm:col-span-2">
+                <label class="flex items-center gap-3 cursor-pointer">
+                  <input type="checkbox" checked={requireDiscord} onChange={(e) => setRequireDiscord((e.target as HTMLInputElement).checked)} class="accent-brand-violet w-4 h-4" />
+                  <div>
+                    <span class="text-text-primary text-sm font-medium">Requiere Discord vinculado</span>
+                    <p class="text-text-muted text-xs mt-0.5">Los participantes deben tener Discord vinculado en saltouruguayserver.com para inscribirse</p>
+                  </div>
+                </label>
               </div>
             </div>
 

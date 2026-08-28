@@ -10,7 +10,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
 
   try {
     const body = await request.json();
-    const { title, description, coverImage, eventDate, eventLocation, status, maxParticipants, customFields } = body;
+    const { title, description, coverImage, eventDate, eventLocation, status, maxParticipants, requireDiscord, customFields } = body;
 
     if (!title) {
       return new Response(JSON.stringify({ success: false, error: 'El título es obligatorio' }), { status: 400 });
@@ -26,6 +26,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
         eventLocation: eventLocation || null,
         status: status || 'upcoming',
         maxParticipants: maxParticipants || null,
+        requireDiscord: requireDiscord || false,
         customFields: customFields || null,
         createdBy: user.id,
       })
