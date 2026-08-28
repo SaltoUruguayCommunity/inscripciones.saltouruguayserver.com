@@ -428,7 +428,7 @@ export default function AdminDashboard({ events: initialEvents, totalInscription
                     {field.type === "select" || field.type === "radio" ? (
                       <div>
                         <label class="text-text-muted text-[10px] font-semibold mb-0.5 block">Opciones (separadas por coma)</label>
-                        <input type="text" value={field.options?.join(", ") || ""} onInput={(e) => updateCustomField(i, "options", (e.target as HTMLInputElement).value.split(",").map((s: string) => s.trim()).filter(Boolean))} class="w-full px-3 py-1.5 bg-surface border border-border-subtle rounded-lg text-text-primary text-xs focus:outline-none focus:border-brand-violet" placeholder="Opción 1, Opción 2, Opción 3" />
+                        <input type="text" value={field.options?.join(", ") || ""} onBlur={(e) => updateCustomField(i, "options", (e.target as HTMLInputElement).value.split(",").map((s: string) => s.trim()).filter(Boolean))} class="w-full px-3 py-1.5 bg-surface border border-border-subtle rounded-lg text-text-primary text-xs focus:outline-none focus:border-brand-violet" placeholder="Opción 1, Opción 2, Opción 3" />
                       </div>
                     ) : null}
                   </div>
