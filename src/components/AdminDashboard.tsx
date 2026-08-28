@@ -479,7 +479,6 @@ export default function AdminDashboard({ events: initialEvents, totalInscription
                 </div>
               </div>
 
-              {/* Inscriptions expanded */}
               {expandedEventId === event.id && (
                 <div class="border-t border-border-subtle p-4 animate-fade-in">
                   {loadingInscriptions === event.id ? (
