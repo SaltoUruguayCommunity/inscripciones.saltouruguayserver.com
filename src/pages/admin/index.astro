@@ -1,0 +1,61 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import AdminDashboard from '../../components/AdminDashboard';
+import { client } from '../../db';
+import { EventsTable, InscriptionsTable, UsersTable } from '../../db/schema';
+import { sql, eq } from 'drizzle-orm';
+
+export const prerender = false;
+
+const user = Astro.locals.user;
+if (!user?.is_admin) {
+  return Astro.redirect("/", 302);
+}
+
+const events = await client
+  .select()
+  .from(EventsTable)
+  .orderBy(EventsTable.createdAt)
+  .all();
+
+const totalInscriptions = await client
+  .select({ count: sql<number>`count(*)` })
+  .from(InscriptionsTable)
+  .get();
+
+const totalUsers = await client
+  .select({ count: sql<number>`count(*)` })
+  .from(UsersTable)
+  .get();
+
+const eventsWithCounts = await Promise.all(
+  events.map(async (event) => {
+    const count = await client
+      .select({ count: sql<number>`count(*)` })
+      .from(InscriptionsTable)
+      .where(eq(InscriptionsTable.eventId, event.id))
+      .get();
+    return { ...event, inscriptionCount: count?.count ?? 0 };
+  })
+);
+---
+
+<Layout title="Admin — Inscripciones">
+  <div class="max-w-6xl mx-auto px-6 py-10">
+    <div class="flex items-center justify-between mb-10">
+      <div>
+        <h1 class="font-[family-name:var(--font-anton)] text-3xl uppercase tracking-wide">
+          <span class="text-transparent bg-clip-text bg-linear-to-r from-brand-violet-light to-brand-cyan">Panel</span>
+          {' '}de Administración
+        </h1>
+        <p class="text-text-muted text-sm mt-1 font-[family-name:var(--font-rubik)]">Gestioná eventos, inscripciones y participantes</p>
+      </div>
+      <div class="flex items-center gap-2">
+        <div class="w-2 h-2 rounded-full bg-brand-emerald animate-pulse"></div>
+        <span class="text-xs text-text-secondary font-[family-name:var(--font-rubik)]">Conectado como <span class="text-text-primary font-medium">{user.username}</span></span>
+      </div>
+    </div>
+
+    <AdminDashboard client:load events={eventsWithCounts} totalInscriptions={totalInscriptions?.count ?? 0} totalUsers={totalUsers?.count ?? 0} user={user} />
+  </div>
+</Layout>

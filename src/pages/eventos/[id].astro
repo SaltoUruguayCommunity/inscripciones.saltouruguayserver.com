@@ -1,0 +1,300 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { client } from '../../db';
+import { EventsTable, InscriptionsTable, UsersTable } from '../../db/schema';
+import { eq, sql } from 'drizzle-orm';
+
+export const prerender = false;
+
+const { id } = Astro.params;
+const user = Astro.locals.user;
+
+if (!id) {
+  return Astro.redirect("/", 302);
+}
+
+const event = await client
+  .select()
+  .from(EventsTable)
+  .where(eq(EventsTable.id, Number(id)))
+  .get();
+
+if (!event) {
+  return Astro.redirect("/", 302);
+}
+
+const inscriptionCount = await client
+  .select({ count: sql<number>`count(*)` })
+  .from(InscriptionsTable)
+  .where(eq(InscriptionsTable.eventId, Number(id)))
+  .get();
+
+let userInscription: any = null;
+if (user) {
+  userInscription = await client
+    .select()
+    .from(InscriptionsTable)
+    .where(eq(InscriptionsTable.userId, user.id))
+    .all()
+    .then((inscriptions) => inscriptions.find((i) => i.eventId === Number(id)));
+}
+
+const formattedDate = event.eventDate
+  ? new Date(event.eventDate).toLocaleDateString("es-UY", { weekday: "long", day: "numeric", month: "long", year: "numeric" })
+  : null;
+
+const statusConfig: Record<string, { label: string; class: string }> = {
+  upcoming: { label: "Próximo", class: "bg-cyan-500/15 text-cyan-300 border border-cyan-500/30" },
+  open: { label: "Inscripciones Abiertas", class: "bg-emerald-500/15 text-emerald-400 border border-emerald-500/30" },
+  ongoing: { label: "En Curso", class: "bg-amber-500/15 text-amber-400 border border-amber-500/30" },
+  closed: { label: "Cerrado", class: "bg-white/5 text-white/40 border border-white/10" },
+  finished: { label: "Finalizado", class: "bg-white/5 text-white/40 border border-white/10" },
+};
+
+const statusInfo = statusConfig[event.status] || statusConfig.upcoming;
+const customFields = (event.customFields as any[]) || [];
+const canInscribe = user && (event.status === 'open' || event.status === 'upcoming') && !userInscription;
+---
+
+<Layout title={`${event.title} — Inscripciones`}>
+  <!-- Hero Banner -->
+  <div class="relative h-64 sm:h-80 overflow-hidden">
+    <div class="absolute inset-0 bg-linear-to-br from-violet-950/80 via-purple-900/40 to-blue-950/60"></div>
+    {event.coverImage ? (
+      <img src={event.coverImage} alt={event.title} class="w-full h-full object-cover opacity-40" />
+    ) : (
+      <div class="absolute inset-0 bg-linear-to-br from-brand-violet/20 via-brand-blue/10 to-brand-cyan/10"></div>
+    )}
+    <div class="absolute inset-0 bg-linear-to-t from-surface via-surface/60 to-transparent"></div>
+
+    <div class="absolute bottom-0 left-0 right-0 p-6 sm:p-10 max-w-4xl mx-auto">
+      <div class="flex items-center gap-3 mb-3">
+        <span class={`badge-pill ${statusInfo.class}`}>{statusInfo.label}</span>
+        {event.maxParticipants && (
+          <span class="text-text-muted text-xs">
+            {inscriptionCount?.count ?? 0} / {event.maxParticipants} inscriptos
+          </span>
+        )}
+      </div>
+      <h1 class="font-[family-name:var(--font-anton)] text-3xl sm:text-4xl uppercase tracking-wide text-text-primary">{event.title}</h1>
+    </div>
+  </div>
+
+  <div class="max-w-4xl mx-auto px-6 py-10">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <!-- Main Content -->
+      <div class="lg:col-span-2 space-y-6">
+        <div class="glass-card p-6">
+          <h2 class="font-[family-name:var(--font-anton)] text-lg uppercase tracking-wide text-text-primary mb-4">Detalles del Evento</h2>
+
+          <div class="space-y-4">
+            {formattedDate && (
+              <div class="flex items-center gap-3 text-text-secondary text-sm">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-brand-violet-light shrink-0">
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                  <line x1="16" y1="2" x2="16" y2="6"></line>
+                  <line x1="8" y1="2" x2="8" y2="6"></line>
+                  <line x1="3" y1="10" x2="21" y2="10"></line>
+                </svg>
+                <span class="capitalize">{formattedDate}</span>
+              </div>
+            )}
+            {event.eventLocation && (
+              <div class="flex items-center gap-3 text-text-secondary text-sm">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-brand-violet-light shrink-0">
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                  <circle cx="12" cy="10" r="3"></circle>
+                </svg>
+                <span>{event.eventLocation}</span>
+              </div>
+            )}
+            {event.maxParticipants && (
+              <div class="flex items-center gap-3 text-text-secondary text-sm">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-brand-violet-light shrink-0">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="9" cy="7" r="4"></circle>
+                </svg>
+                <span>{event.maxParticipants} lugares máximo</span>
+              </div>
+            )}
+          </div>
+
+          {event.description && (
+            <>
+              <div class="divider-gradient my-5"></div>
+              <div class="text-text-secondary text-sm leading-relaxed whitespace-pre-line">{event.description}</div>
+            </>
+          )}
+        </div>
+      </div>
+
+      <!-- Sidebar -->
+      <div class="space-y-6">
+        <div class="glass-card p-6 sticky top-24">
+          <h3 class="font-[family-name:var(--font-anton)] text-base uppercase tracking-wide text-text-primary mb-4">Inscripción</h3>
+
+          {!user ? (
+            <div class="text-center py-4">
+              <p class="text-text-muted text-sm mb-4">Iniciá sesión para inscribirte</p>
+              <button onclick="handleSignIn()" class="btn-primary w-full !text-sm">
+                Iniciar Sesión
+              </button>
+            </div>
+          ) : userInscription ? (
+            <div class="text-center py-4">
+              <div class="w-14 h-14 mx-auto mb-3 rounded-full bg-brand-emerald/10 border border-brand-emerald/25 flex items-center justify-center">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="text-brand-emerald">
+                  <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+              </div>
+              <p class="text-brand-emerald font-semibold text-sm mb-1">Ya estás inscrito</p>
+              <p class="text-text-muted text-xs">Te esperamos en el evento</p>
+              {userInscription.customData && (
+                <div class="mt-4 text-left border-t border-border-subtle pt-4">
+                  <p class="text-text-muted text-[10px] font-semibold uppercase tracking-wider mb-2">Tus datos</p>
+                  {Object.entries(userInscription.customData as Record<string, string>).map(([key, value]) => (
+                    <div class="flex justify-between text-xs py-1">
+                      <span class="text-text-muted capitalize">{key.replace(/_/g, " ")}</span>
+                      <span class="text-text-primary">{value}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          ) : event.status === 'closed' || event.status === 'finished' ? (
+            <div class="text-center py-4">
+              <p class="text-text-muted text-sm">Las inscripciones están cerradas</p>
+            </div>
+          ) : (
+            <form id="inscriptionForm" class="space-y-4">
+              <!-- User info from session (read-only) -->
+              <div class="p-3 bg-surface-elevated rounded-xl border border-border-subtle space-y-3">
+                <p class="text-text-muted text-[10px] font-semibold uppercase tracking-wider">Tu información</p>
+                <div class="flex items-center gap-3">
+                  {user.image ? (
+                    <img src={user.image} alt="" class="w-10 h-10 rounded-full border border-border-subtle object-cover" />
+                  ) : (
+                    <img src="/favicon.svg" alt="" class="w-10 h-10 rounded-full border border-border-subtle object-cover" />
+                  )}
+                  <div>
+                    <p class="text-text-primary text-sm font-medium">{user.name || user.username}</p>
+                    <p class="text-text-muted text-xs">{user.email || user.username}</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Custom fields -->
+              {customFields.map((field: any) => (
+                <div>
+                  <label class="block text-text-muted text-xs font-semibold mb-1.5">
+                    {field.label} {field.required && <span class="text-brand-rose">*</span>}
+                  </label>
+                  {field.type === "text" || field.type === "url" || field.type === "email" ? (
+                    <input
+                      type={field.type}
+                      name={field.name}
+                      required={field.required}
+                      placeholder={field.placeholder || ""}
+                      class="w-full px-3 py-2 bg-surface-elevated border border-border-subtle rounded-xl text-text-primary text-sm focus:outline-none focus:border-brand-violet transition-colors"
+                    />
+                  ) : field.type === "textarea" ? (
+                    <textarea
+                      name={field.name}
+                      required={field.required}
+                      placeholder={field.placeholder || ""}
+                      rows={3}
+                      class="w-full px-3 py-2 bg-surface-elevated border border-border-subtle rounded-xl text-text-primary text-sm focus:outline-none focus:border-brand-violet transition-colors resize-none"
+                    />
+                  ) : field.type === "select" ? (
+                    <select name={field.name} required={field.required} class="w-full px-3 py-2 bg-surface-elevated border border-border-subtle rounded-xl text-text-primary text-sm focus:outline-none focus:border-brand-violet transition-colors">
+                      <option value="">{field.placeholder || "Seleccionar..."}</option>
+                      {field.options?.map((opt: string) => <option value={opt}>{opt}</option>)}
+                    </select>
+                  ) : field.type === "radio" ? (
+                    <div class="flex flex-wrap gap-3">
+                      {field.options?.map((opt: string) => (
+                        <label class="flex items-center gap-2 cursor-pointer">
+                          <input type="radio" name={field.name} value={opt} required={field.required} class="accent-brand-violet" />
+                          <span class="text-text-secondary text-sm">{opt}</span>
+                        </label>
+                      ))}
+                    </div>
+                  ) : null}
+                  {field.helpText && <p class="text-text-muted text-[10px] mt-1">{field.helpText}</p>}
+                </div>
+              ))}
+
+              <div>
+                <label class="block text-text-muted text-xs font-semibold mb-1.5">Notas adicionales</label>
+                <textarea name="notes" rows={2} class="w-full px-3 py-2 bg-surface-elevated border border-border-subtle rounded-xl text-text-primary text-sm focus:outline-none focus:border-brand-violet transition-colors resize-none" placeholder="Información adicional..." />
+              </div>
+
+              <button type="submit" class="btn-primary w-full !text-sm" id="submitBtn">
+                Inscribirme
+              </button>
+              <div id="formMessage" class="text-xs text-center hidden"></div>
+            </form>
+          )}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script define:vars={{ eventId: event.id }}>
+    const form = document.getElementById("inscriptionForm");
+    if (form) {
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const btn = document.getElementById("submitBtn");
+        const msg = document.getElementById("formMessage");
+        btn.disabled = true;
+        btn.textContent = "Inscribiendo...";
+        msg.classList.add("hidden");
+
+        const formData = new FormData(form);
+        const customData = {};
+        const skipKeys = ["notes"];
+
+        for (const [key, value] of formData.entries()) {
+          if (!skipKeys.includes(key)) {
+            customData[key] = value;
+          }
+        }
+
+        const data = {
+          eventId: eventId,
+          notes: formData.get("notes") || null,
+          customData: Object.keys(customData).length > 0 ? customData : null,
+        };
+
+        try {
+          const res = await fetch("/api/inscriptions/create", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(data),
+          });
+          const result = await res.json();
+
+          if (result.success) {
+            msg.textContent = "¡Inscripción exitosa!";
+            msg.className = "text-xs text-center text-brand-emerald";
+            msg.classList.remove("hidden");
+            form.innerHTML = '<div class="text-center py-4"><div class="w-14 h-14 mx-auto mb-3 rounded-full bg-brand-emerald/10 border border-brand-emerald/25 flex items-center justify-center"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="text-brand-emerald"><polyline points="20 6 9 17 4 12"></polyline></svg></div><p class="text-brand-emerald font-semibold text-sm mb-1">¡Inscripción confirmada!</p><p class="text-text-muted text-xs">Te esperamos en el evento</p></div>';
+          } else {
+            msg.textContent = result.error || "Error al inscribirse";
+            msg.className = "text-xs text-center text-brand-rose";
+            msg.classList.remove("hidden");
+            btn.disabled = false;
+            btn.textContent = "Inscribirme";
+          }
+        } catch {
+          msg.textContent = "Error de conexión";
+          msg.className = "text-xs text-center text-brand-rose";
+          msg.classList.remove("hidden");
+          btn.disabled = false;
+          btn.textContent = "Inscribirme";
+        }
+      });
+    }
+  </script>
+</Layout>
