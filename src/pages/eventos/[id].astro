@@ -171,7 +171,7 @@ const canInscribe = user && (event.status === 'open' || event.status === 'upcomi
               <div class="p-3 bg-surface-elevated rounded-xl border border-border-subtle space-y-3">
                 <p class="text-text-muted text-[10px] font-semibold uppercase tracking-wider">Tu información</p>
                 <div class="flex items-center gap-3">
-                  {user.image ? (
+                  {user?.image ? (
                     <img src={user.image} alt="" class="w-10 h-10 rounded-full border border-border-subtle object-cover" />
           ) : event.requireDiscord && !(user as any).discordId ? (
             <div class="text-center py-6 space-y-3">
@@ -185,7 +185,7 @@ const canInscribe = user && (event.status === 'open' || event.status === 'upcomi
                 Para inscribirte en este evento debés vincular tu cuenta de Discord en
                 <a href="https://saltouruguayserver.com/usuario" target="_blank" class="text-brand-violet-light hover:underline">saltouruguayserver.com/usuario</a>
               </p>
-              <button onclick="window.location.reload()" class="text-xs text-text-muted hover:text-text-primary transition-colors bg-transparent border border-border-subtle rounded-lg px-4 py-2 cursor-pointer hover:border-brand-violet">
+              <button id="relogin" class="text-xs text-text-muted hover:text-text-primary transition-colors bg-transparent border border-border-subtle rounded-lg px-4 py-2 cursor-pointer hover:border-brand-violet">
                 Recargar sesión
               </button>
             </div>
@@ -193,8 +193,8 @@ const canInscribe = user && (event.status === 'open' || event.status === 'upcomi
                     <img src="/favicon.svg" alt="" class="w-10 h-10 rounded-full border border-border-subtle object-cover" />
                   )}
                   <div>
-                    <p class="text-text-primary text-sm font-medium">{user.name || user.username}</p>
-                    <p class="text-text-muted text-xs">{user.email || user.username}</p>
+                    <p class="text-text-primary text-sm font-medium">{user?.name || user?.username}</p>
+                    <p class="text-text-muted text-xs">{user?.email || user?.username}</p>
                   </div>
                 </div>
               </div>
@@ -301,6 +301,18 @@ const canInscribe = user && (event.status === 'open' || event.status === 'upcomi
           btn.disabled = false;
           btn.textContent = "Inscribirme";
         }
+      });
+    }
+  </script>
+
+  <script>
+  import { handleSignIn } from "../../lib/auth-client";
+
+    const reloginBtn = document.getElementById("relogin");
+    if (reloginBtn) {
+      reloginBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        handleSignIn();
       });
     }
   </script>
