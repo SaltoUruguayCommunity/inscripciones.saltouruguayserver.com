@@ -1,23 +1,196 @@
+---
+import '../styles/global.css';
+
+interface Props {
+  title?: string;
+  description?: string;
+}
+
+const { title = "Incripciones — Salto Uruguay", description = "Inscripciones a eventos y torneos de Salto Uruguay Server" } = Astro.props;
+const user = Astro.locals.user;
+---
+
 <!doctype html>
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<meta name="viewport" content="width=device-width" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro Basics</title>
-	</head>
-	<body>
-		<slot />
-	</body>
+<html lang="es" class="scroll-smooth bg-[#060109]" data-theme="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content={description} />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="generator" content={Astro.generator} />
+    <title>{title}</title>
+  </head>
+  <body class="min-h-screen text-white overflow-x-hidden">
+    <!-- Ambient Background -->
+    <div class="fixed inset-0 -z-10 pointer-events-none overflow-hidden bg-[#060109]">
+      <div class="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.02)_0%,transparent_60%)]"></div>
+      <div class="absolute top-[-20%] left-[-10%] w-[700px] h-[700px] rounded-full bg-purple-900/10 blur-[150px] pointer-events-none"></div>
+      <div class="absolute bottom-[-20%] right-[-10%] w-[500px] h-[500px] rounded-full bg-blue-900/8 blur-[120px] pointer-events-none"></div>
+    </div>
+
+    <!-- Floating Island Header -->
+    <header id="site-header" class="fixed top-0 left-0 right-0 z-50 w-full transition-all duration-500 py-6">
+      <div id="nav-island" class="mx-auto flex items-center justify-between px-4 md:px-6 py-2 transition-all duration-500 w-[95%] max-w-6xl rounded-full border border-transparent">
+        <!-- Logo -->
+        <a href="/" class="flex items-center gap-3 text-white no-underline group relative">
+          <div class="relative">
+            <div class="absolute inset-0 bg-yellow-500/15 blur-2xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+            <img src="/favicon.svg" alt="Salto Uruguay" class="relative w-9 h-9 object-contain drop-shadow-[0_0_10px_rgba(255,255,255,0.1)] transition-all duration-500 group-hover:scale-110 group-hover:drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]" />
+          </div>
+          <span class="font-[family-name:var(--font-teko)] text-xl uppercase tracking-wider text-white/80 hidden sm:block">Incripciones</span>
+        </a>
+
+        <!-- Nav Links -->
+        <div class="flex items-center gap-2">
+          <a href="#eventos" class="nav-link relative flex flex-col items-center justify-center px-4 py-1 group transition-all duration-300">
+            <span class="font-[family-name:var(--font-teko)] text-xl uppercase tracking-wide text-white/60 group-hover:text-white/90 transition-all duration-200 relative z-10">Eventos</span>
+          </a>
+
+          {user ? (
+            <div class="flex items-center gap-3 ml-2">
+              {user.is_admin && (
+                <a href="/admin" class="badge-pill bg-cyan-500/15 text-cyan-300 border border-cyan-500/30 hover:bg-cyan-500/25 transition-colors">
+                  Admin
+                </a>
+              )}
+              <div class="flex items-center gap-2">
+                {user.image ? (
+                  <img src={user.image} alt="" class="w-8 h-8 rounded-full border border-white/10 object-cover" />
+                ) : (
+                  <img src="/favicon.svg" alt="" class="w-8 h-8 rounded-full border border-white/10 object-cover" />
+                )}
+              </div>
+              <button
+                onclick="signOut({ callbackUrl: '/' })"
+                class="font-[family-name:var(--font-teko)] text-base uppercase tracking-wide text-white/40 hover:text-white/80 transition-colors cursor-pointer bg-transparent border-none px-2"
+              >
+                Salir
+              </button>
+            </div>
+          ) : (
+            <button
+              onclick="handleSignIn()"
+              class="ml-2 btn-primary !py-2 !px-5 !text-sm !rounded-full"
+            >
+              Ingresar
+            </button>
+          )}
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="pt-24">
+      <slot />
+    </main>
+
+    <!-- Footer -->
+    <footer class="relative mt-auto border-t border-white/10 bg-[#050505] pt-16 pb-8 overflow-hidden">
+      <div class="absolute inset-0 opacity-[0.02] pointer-events-none" style="background-image: url('data:image/svg+xml,%3Csvg width=&quot;60&quot; height=&quot;60&quot; xmlns=&quot;http://www.w3.org/2000/svg&quot;%3E%3Cpath d=&quot;M0 0h60v60H0z&quot; fill=&quot;none&quot;/%3E%3Cpath d=&quot;M0 60V0h60&quot; fill=&quot;none&quot; stroke=&quot;white&quot; stroke-width=&quot;0.5&quot;/%3E%3C/svg%3E');"></div>
+      <div class="absolute bottom-0 left-1/2 -translate-x-1/2 w-[800px] h-[300px] bg-blue-900/5 blur-[100px] rounded-full pointer-events-none"></div>
+
+      <div class="max-w-6xl mx-auto px-6 relative z-10">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 mb-12">
+          <!-- Brand -->
+          <div class="lg:col-span-2">
+            <div class="flex items-center gap-3 mb-4">
+              <img src="/favicon.svg" alt="Salto Uruguay" class="w-10 h-10 object-contain drop-shadow-[0_0_10px_rgba(255,255,255,0.1)]" />
+              <span class="font-[family-name:var(--font-anton)] text-xl uppercase tracking-wide">Salto Uruguay</span>
+            </div>
+            <p class="text-white/40 text-sm leading-relaxed max-w-sm">
+              Plataforma oficial de inscripciones a eventos y torneos de la comunidad Salto Uruguay Server.
+            </p>
+          </div>
+
+          <!-- Links -->
+          <div>
+            <h3 class="font-bold text-white uppercase tracking-widest text-xs mb-4 flex items-center gap-2">
+              <span class="w-2 h-2 bg-brand-violet rounded-full"></span> Navegar
+            </h3>
+            <div class="flex flex-col gap-2">
+              <a href="/" class="text-white/50 hover:text-white hover:translate-x-1 transition-all duration-200 text-sm inline-block">Inicio</a>
+              <a href="#eventos" class="text-white/50 hover:text-white hover:translate-x-1 transition-all duration-200 text-sm inline-block">Eventos</a>
+              <a href="https://saltouruguayserver.com" target="_blank" class="text-white/50 hover:text-white hover:translate-x-1 transition-all duration-200 text-sm inline-block">Sitio Principal</a>
+            </div>
+          </div>
+
+          <!-- Community -->
+          <div>
+            <h3 class="font-bold text-white uppercase tracking-widest text-xs mb-4 flex items-center gap-2">
+              <span class="w-2 h-2 bg-brand-cyan rounded-full"></span> Comunidad
+            </h3>
+            <div class="flex flex-col gap-2">
+              <a href="https://saltouruguayserver.com" target="_blank" class="text-white/50 hover:text-white hover:translate-x-1 transition-all duration-200 text-sm inline-block">Discord</a>
+              <a href="https://saltouruguayserver.com" target="_blank" class="text-white/50 hover:text-white hover:translate-x-1 transition-all duration-200 text-sm inline-block">Twitch</a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Divider -->
+        <div class="h-px w-full bg-linear-to-r from-transparent via-white/10 to-transparent mb-8"></div>
+
+        <!-- Bottom -->
+        <div class="flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-white/40 font-mono">
+          <span>© 2026 Salto Uruguay Server. Todos los derechos reservados.</span>
+          <span class="uppercase tracking-widest text-[10px]">Incripciones v1.0</span>
+        </div>
+      </div>
+    </footer>
+
+    <script>
+      import { signOut } from "auth-astro/client";
+      import { handleSignIn } from "../lib/auth-client";
+
+      (window as any).handleSignIn = handleSignIn;
+      (window as any).signOut = signOut;
+
+      // Floating island scroll effect
+      const header = document.getElementById("site-header");
+      const island = document.getElementById("nav-island");
+
+      if (header && island) {
+        let ticking = false;
+        window.addEventListener("scroll", () => {
+          if (!ticking) {
+            requestAnimationFrame(() => {
+              if (window.scrollY > 50) {
+                header.classList.add("is-scrolled");
+                island.style.background = "linear-gradient(135deg, rgba(8,8,8,0.9) 0%, rgba(14,14,14,0.85) 100%)";
+                island.style.backdropFilter = "blur(20px) saturate(180%)";
+                island.style.borderColor = "rgba(255,255,255,0.07)";
+                island.style.boxShadow = "0 0 0 1px rgba(255,255,255,0.04) inset, 0 8px 32px rgba(0,0,0,0.6), 0 2px 8px rgba(0,0,0,0.4)";
+                island.style.maxWidth = "64rem";
+              } else {
+                header.classList.remove("is-scrolled");
+                island.style.background = "transparent";
+                island.style.backdropFilter = "none";
+                island.style.borderColor = "transparent";
+                island.style.boxShadow = "none";
+                island.style.maxWidth = "";
+              }
+              ticking = false;
+            });
+            ticking = true;
+          }
+        });
+      }
+    </script>
+  </body>
 </html>
 
 <style>
-	html,
-	body {
-		margin: 0;
-		width: 100%;
-		height: 100%;
-	}
+  :global(#site-header.is-scrolled #nav-island::before) {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 10%;
+    right: 10%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent);
+    border-radius: 9999px;
+  }
+
+  :global(.nav-underline) {
+    transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.25s ease;
+  }
 </style>

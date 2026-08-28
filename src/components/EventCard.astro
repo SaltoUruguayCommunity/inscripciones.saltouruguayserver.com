@@ -1,0 +1,114 @@
+---
+interface Props {
+  title: string;
+  description?: string;
+  coverImage?: string;
+  eventDate?: string;
+  eventLocation?: string;
+  status: string;
+  maxParticipants?: number;
+  inscriptionCount?: number;
+  href?: string;
+}
+
+const { title, description, coverImage, eventDate, eventLocation, status, maxParticipants, inscriptionCount = 0, href } = Astro.props;
+
+const statusConfig: Record<string, { label: string; class: string }> = {
+  upcoming: { label: "Próximo", class: "bg-cyan-500/15 text-cyan-300 border border-cyan-500/30" },
+  open: { label: "Inscripciones Abiertas", class: "bg-emerald-500/15 text-emerald-400 border border-emerald-500/30" },
+  ongoing: { label: "En Curso", class: "bg-amber-500/15 text-amber-400 border border-amber-500/30" },
+  closed: { label: "Cerrado", class: "bg-white/5 text-white/40 border border-white/10" },
+  finished: { label: "Finalizado", class: "bg-white/5 text-white/40 border border-white/10" },
+};
+
+const statusInfo = statusConfig[status] || statusConfig.upcoming;
+
+const formattedDate = eventDate
+  ? new Date(eventDate).toLocaleDateString("es-UY", { day: "numeric", month: "long", year: "numeric" })
+  : null;
+---
+
+<a
+  href={href || "#"}
+  class="group relative flex flex-col rounded-[24px] border border-white/10 bg-[#0a0a0a] overflow-hidden transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl hover:shadow-purple-900/10 hover:border-white/20"
+>
+  <!-- Cover Image -->
+  <div class="relative h-52 overflow-hidden bg-[#0f0f15]">
+    {coverImage ? (
+      <img
+        src={coverImage}
+        alt={title}
+        class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 opacity-60 group-hover:opacity-80"
+      />
+    ) : (
+      <div class="w-full h-full bg-linear-to-br from-purple-900/20 via-blue-900/10 to-cyan-900/10 flex items-center justify-center">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="text-white/10">
+          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+          <line x1="16" y1="2" x2="16" y2="6"></line>
+          <line x1="8" y1="2" x2="8" y2="6"></line>
+          <line x1="3" y1="10" x2="21" y2="10"></line>
+        </svg>
+      </div>
+    )}
+
+    <!-- Gradient overlay -->
+    <div class="absolute inset-0 bg-linear-to-t from-[#0a0a0a] via-[#0a0a0a]/40 to-transparent"></div>
+
+    <!-- Status badge -->
+    <div class="absolute top-4 left-4 z-10">
+      <span class={`badge-pill ${statusInfo.class} backdrop-blur-md`}>
+        {statusInfo.label}
+      </span>
+    </div>
+  </div>
+
+  <!-- Content -->
+  <div class="relative flex flex-col flex-1 p-6">
+    <h3 class="font-[family-name:var(--font-anton)] text-xl md:text-2xl text-white uppercase tracking-wide mb-2 group-hover:text-brand-violet-light transition-colors duration-300">
+      {title}
+    </h3>
+
+    {description && (
+      <p class="text-white/40 text-sm leading-relaxed mb-4 line-clamp-2 font-[family-name:var(--font-rubik)]">
+        {description}
+      </p>
+    )}
+
+    <div class="mt-auto space-y-2">
+      {formattedDate && (
+        <div class="flex items-center gap-2 text-white/50 text-xs">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+            <line x1="16" y1="2" x2="16" y2="6"></line>
+            <line x1="8" y1="2" x2="8" y2="6"></line>
+            <line x1="3" y1="10" x2="21" y2="10"></line>
+          </svg>
+          <span class="capitalize font-[family-name:var(--font-rubik)]">{formattedDate}</span>
+        </div>
+      )}
+      {eventLocation && (
+        <div class="flex items-center gap-2 text-white/50 text-xs">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+            <circle cx="12" cy="10" r="3"></circle>
+          </svg>
+          <span class="font-[family-name:var(--font-rubik)]">{eventLocation}</span>
+        </div>
+      )}
+    </div>
+
+    <!-- Footer -->
+    <div class="divider-gradient my-4"></div>
+    <div class="flex items-center justify-between">
+      <span class="text-white/30 text-xs font-[family-name:var(--font-rubik)]">
+        {inscriptionCount}{maxParticipants ? ` / ${maxParticipants}` : ''} inscriptos
+      </span>
+      <span class="text-brand-violet-light text-xs font-bold font-[family-name:var(--font-teko)] uppercase tracking-wider group-hover:translate-x-1 transition-transform duration-300 inline-flex items-center gap-1">
+        Ver más
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M5 12h14M12 5l7 7-7 7"/>
+        </svg>
+      </span>
+    </div>
+  </div>
+</a>
