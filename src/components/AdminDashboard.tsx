@@ -41,6 +41,10 @@ export default function AdminDashboard({ events: initialEvents, totalInscription
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
+  const [expandedEventId, setExpandedEventId] = useState<number | null>(null);
+  const [inscriptions, setInscriptions] = useState<Record<number, any[]>>({});
+  const [loadingInscriptions, setLoadingInscriptions] = useState<number | null>(null);
+
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [coverImage, setCoverImage] = useState("");
@@ -216,6 +220,28 @@ export default function AdminDashboard({ events: initialEvents, totalInscription
       }
     } catch {
       setMessage({ type: "error", text: "Error al eliminar" });
+    }
+  };
+
+  const toggleInscriptions = async (eventId: number) => {
+    if (expandedEventId === eventId) {
+      setExpandedEventId(null);
+      return;
+    }
+    setExpandedEventId(eventId);
+    if (inscriptions[eventId]) return;
+
+    setLoadingInscriptions(eventId);
+    try {
+      const res = await fetch(`/api/inscriptions/list?eventId=${eventId}`);
+      const data = await res.json();
+      if (data.success) {
+        setInscriptions({ ...inscriptions, [eventId]: data.inscriptions });
+      }
+    } catch {
+      setMessage({ type: "error", text: "Error al cargar inscriptos" });
+    } finally {
+      setLoadingInscriptions(null);
     }
   };
 
@@ -440,7 +466,9 @@ export default function AdminDashboard({ events: initialEvents, totalInscription
                   </div>
                   <div class="flex items-center gap-4 text-text-muted text-xs">
                     <span>{dateStr}</span>
-                    <span>{event.inscriptionCount} inscriptos</span>
+                    <button onClick={() => toggleInscriptions(event.id)} class="hover:text-brand-violet-light transition-colors cursor-pointer bg-transparent border-none text-text-muted text-xs font-medium">
+                      {event.inscriptionCount} inscriptos
+                    </button>
                     {event.eventLocation && <span>{event.eventLocation}</span>}
                   </div>
                 </div>
@@ -450,6 +478,48 @@ export default function AdminDashboard({ events: initialEvents, totalInscription
                   <button onClick={() => handleDelete(event.id)} class="text-text-muted hover:text-brand-rose text-xs transition-colors px-2 py-1 cursor-pointer bg-transparent border-none">Eliminar</button>
                 </div>
               </div>
+
+              {/* Inscriptions expanded */}
+              {expandedEventId === event.id && (
+                <div class="border-t border-border-subtle p-4 animate-fade-in">
+                  {loadingInscriptions === event.id ? (
+                    <p class="text-text-muted text-xs text-center py-4">Cargando inscriptos...</p>
+                  ) : !inscriptions[event.id]?.length ? (
+                    <p class="text-text-muted text-xs text-center py-4">No hay inscriptos todavía</p>
+                  ) : (
+                    <div class="space-y-2">
+                      <p class="text-text-muted text-[10px] font-semibold uppercase tracking-wider mb-2">
+                        {inscriptions[event.id].length} inscripto{inscriptions[event.id].length !== 1 ? 's' : ''}
+                      </p>
+                      {inscriptions[event.id].map((ins) => (
+                        <div class="flex items-center gap-3 p-2.5 bg-surface-elevated rounded-lg border border-border-subtle">
+                          {ins.avatar ? (
+                            <img src={ins.avatar} alt="" class="w-8 h-8 rounded-full object-cover" />
+                          ) : (
+                            <div class="w-8 h-8 rounded-full bg-brand-violet/20 flex items-center justify-center text-brand-violet-light text-xs font-bold">
+                              {ins.displayName?.charAt(0)?.toUpperCase()}
+                            </div>
+                          )}
+                          <div class="flex-1 min-w-0">
+                            <p class="text-text-primary text-xs font-medium truncate">{ins.displayName}</p>
+                            <p class="text-text-muted text-[10px] truncate">{ins.email}</p>
+                          </div>
+                          <div class="text-right">
+                            {ins.customData && Object.keys(ins.customData).length > 0 && (
+                              <div class="space-y-0.5">
+                                {Object.entries(ins.customData).map(([key, val]) => (
+                                  <p class="text-text-muted text-[10px]"><span class="text-text-secondary">{key}:</span> {String(val)}</p>
+                                ))}
+                              </div>
+                            )}
+                            {ins.notes && <p class="text-text-muted text-[10px] italic mt-0.5">{ins.notes}</p>}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
             );
           })}
         </div>
