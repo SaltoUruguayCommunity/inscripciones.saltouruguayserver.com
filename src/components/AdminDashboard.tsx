@@ -500,7 +500,6 @@ export default function AdminDashboard({ events: initialEvents, totalInscription
                               {event.customFields?.map((f) => (
                                 <th class="text-left py-2 px-3 text-text-muted font-semibold">{f.label}</th>
                               ))}
-                              <th class="text-left py-2 px-3 text-text-muted font-semibold">Notas</th>
                             </tr>
                           </thead>
                           <tbody>
@@ -522,7 +521,6 @@ export default function AdminDashboard({ events: initialEvents, totalInscription
                                 {event.customFields?.map((f) => (
                                   <td class="py-2.5 px-3 text-text-secondary">{ins.customData?.[f.name] ?? '-'}</td>
                                 ))}
-                                <td class="py-2.5 px-3 text-text-muted italic">{ins.notes || '-'}</td>
                               </tr>
                             ))}
                           </tbody>
