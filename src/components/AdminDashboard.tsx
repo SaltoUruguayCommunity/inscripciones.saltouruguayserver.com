@@ -141,6 +141,9 @@ export default function AdminDashboard({ events: initialEvents, totalInscription
 
   const updateCustomField = (index: number, key: keyof CustomField, value: any) => {
     const updated = [...customFields];
+    if (key === "name") {
+      value = value.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "");
+    }
     updated[index] = { ...updated[index], [key]: value };
     if (key === "label" && !updated[index].name) {
       updated[index].name = value
