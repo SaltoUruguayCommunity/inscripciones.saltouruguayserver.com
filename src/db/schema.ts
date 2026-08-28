@@ -8,6 +8,8 @@ export const UsersTable = sqliteTable('users', {
   displayName: text('display_name').notNull(),
   username: text('username').notNull(),
   avatar: text('avatar'),
+  discordId: text('discord_id'),
+  discordUsername: text('discord_username'),
   admin: integer('admin', { mode: 'boolean' }).notNull().default(false),
   createdAt: text('created_at').notNull().default(sql`(current_timestamp)`),
   updatedAt: text('updated_at').notNull().default(sql`(current_timestamp)`),

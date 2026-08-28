@@ -25,6 +25,7 @@ export const GET: APIRoute = async ({ url, locals }) => {
         email: UsersTable.email,
         avatar: UsersTable.avatar,
         username: UsersTable.username,
+        discordUsername: UsersTable.discordUsername,
       })
       .from(InscriptionsTable)
       .innerJoin(UsersTable, eq(InscriptionsTable.userId, UsersTable.id))

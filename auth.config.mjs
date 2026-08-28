@@ -26,6 +26,8 @@ export default defineConfig({
           email: profile.email,
           image: profile.avatar,
           username: profile.username,
+          discordId: profile.discordId,
+          discordUsername: profile.discordUsername,
         };
       },
     },
@@ -49,6 +51,8 @@ export default defineConfig({
               username: profile.username,
               avatar: profile.picture || profile.avatar,
               email: profile.email,
+              discordId: profile.discordId || null,
+              discordUsername: profile.discordUsername || null,
               admin: Boolean(profile.is_admin),
               updatedAt: sql`(current_timestamp)`,
             })
@@ -66,6 +70,8 @@ export default defineConfig({
               username: profile.username,
               avatar: profile.picture || profile.avatar,
               email: profile.email,
+              discordId: profile.discordId || null,
+              discordUsername: profile.discordUsername || null,
               admin: Boolean(profile.is_admin),
             })
             .returning()
@@ -91,6 +97,8 @@ export default defineConfig({
             ...session.user,
             id: user.id,
             username: user.username,
+            discordId: user.discordId,
+            discordUsername: user.discordUsername,
             is_admin: Boolean(user.admin),
           };
         }

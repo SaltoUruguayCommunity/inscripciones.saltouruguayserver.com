@@ -496,6 +496,7 @@ export default function AdminDashboard({ events: initialEvents, totalInscription
                           <thead>
                             <tr class="border-b border-border-subtle">
                               <th class="text-left py-2 px-3 text-text-muted font-semibold">Nombre</th>
+                              <th class="text-left py-2 px-3 text-text-muted font-semibold">Discord</th>
                               <th class="text-left py-2 px-3 text-text-muted font-semibold">Email</th>
                               {event.customFields?.map((f) => (
                                 <th class="text-left py-2 px-3 text-text-muted font-semibold">{f.label}</th>
@@ -517,6 +518,7 @@ export default function AdminDashboard({ events: initialEvents, totalInscription
                                     <span class="text-text-primary font-medium">{ins.displayName}</span>
                                   </div>
                                 </td>
+                                <td class="py-2.5 px-3 text-text-secondary">{ins.discordUsername || '-'}</td>
                                 <td class="py-2.5 px-3 text-text-secondary">{ins.email}</td>
                                 {event.customFields?.map((f) => (
                                   <td class="py-2.5 px-3 text-text-secondary">{ins.customData?.[f.name] ?? '-'}</td>
