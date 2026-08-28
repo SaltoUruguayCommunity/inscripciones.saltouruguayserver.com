@@ -224,11 +224,6 @@ const canInscribe = user && (event.status === 'open' || event.status === 'upcomi
                 </div>
               ))}
 
-              <div>
-                <label class="block text-text-muted text-xs font-semibold mb-1.5">Notas adicionales</label>
-                <textarea name="notes" rows={2} class="w-full px-3 py-2 bg-surface-elevated border border-border-subtle rounded-xl text-text-primary text-sm focus:outline-none focus:border-brand-violet transition-colors resize-none" placeholder="Información adicional..." />
-              </div>
-
               <button type="submit" class="btn-primary w-full !text-sm" id="submitBtn">
                 Inscribirme
               </button>
@@ -253,17 +248,13 @@ const canInscribe = user && (event.status === 'open' || event.status === 'upcomi
 
         const formData = new FormData(form);
         const customData = {};
-        const skipKeys = ["notes"];
 
         for (const [key, value] of formData.entries()) {
-          if (!skipKeys.includes(key)) {
-            customData[key] = value;
-          }
+          customData[key] = value;
         }
 
         const data = {
           eventId: eventId,
-          notes: formData.get("notes") || null,
           customData: Object.keys(customData).length > 0 ? customData : null,
         };
 

@@ -11,7 +11,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
 
   try {
     const body = await request.json();
-    const { eventId, notes, customData } = body;
+    const { eventId, customData } = body;
 
     if (!eventId) {
       return new Response(JSON.stringify({ success: false, error: 'eventId requerido' }), { status: 400 });
@@ -34,7 +34,6 @@ export const POST: APIRoute = async ({ request, locals }) => {
         eventId,
         userId: user.id,
         customData: customData || null,
-        notes: notes || null,
       })
       .returning()
       .get();

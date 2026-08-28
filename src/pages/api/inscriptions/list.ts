@@ -19,7 +19,6 @@ export const GET: APIRoute = async ({ url, locals }) => {
       .select({
         id: InscriptionsTable.id,
         customData: InscriptionsTable.customData,
-        notes: InscriptionsTable.notes,
         status: InscriptionsTable.status,
         createdAt: InscriptionsTable.createdAt,
         displayName: UsersTable.displayName,
