@@ -451,6 +451,7 @@ export default function AdminDashboard({ events: initialEvents, totalInscription
               : "Sin fecha";
 
             return (
+              <div>
               <div class="glass-card p-4 flex items-center justify-between gap-4">
                 <div class="flex-1 min-w-0">
                   <div class="flex items-center gap-3 mb-1">
@@ -519,6 +520,7 @@ export default function AdminDashboard({ events: initialEvents, totalInscription
                   )}
                 </div>
               )}
+              </div>
             );
           })}
         </div>
