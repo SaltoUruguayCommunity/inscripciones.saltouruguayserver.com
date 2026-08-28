@@ -487,35 +487,47 @@ export default function AdminDashboard({ events: initialEvents, totalInscription
                   ) : !inscriptions[event.id]?.length ? (
                     <p class="text-text-muted text-xs text-center py-4">No hay inscriptos todavía</p>
                   ) : (
-                    <div class="space-y-2">
-                      <p class="text-text-muted text-[10px] font-semibold uppercase tracking-wider mb-2">
+                    <div>
+                      <p class="text-text-muted text-[10px] font-semibold uppercase tracking-wider mb-3">
                         {inscriptions[event.id].length} inscripto{inscriptions[event.id].length !== 1 ? 's' : ''}
                       </p>
-                      {inscriptions[event.id].map((ins) => (
-                        <div class="flex items-center gap-3 p-2.5 bg-surface-elevated rounded-lg border border-border-subtle">
-                          {ins.avatar ? (
-                            <img src={ins.avatar} alt="" class="w-8 h-8 rounded-full object-cover" />
-                          ) : (
-                            <div class="w-8 h-8 rounded-full bg-brand-violet/20 flex items-center justify-center text-brand-violet-light text-xs font-bold">
-                              {ins.displayName?.charAt(0)?.toUpperCase()}
-                            </div>
-                          )}
-                          <div class="flex-1 min-w-0">
-                            <p class="text-text-primary text-xs font-medium truncate">{ins.displayName}</p>
-                            <p class="text-text-muted text-[10px] truncate">{ins.email}</p>
-                          </div>
-                          <div class="text-right">
-                            {ins.customData && Object.keys(ins.customData).length > 0 && (
-                              <div class="space-y-0.5">
-                                {Object.entries(ins.customData).map(([key, val]) => (
-                                  <p class="text-text-muted text-[10px]"><span class="text-text-secondary">{key}:</span> {String(val)}</p>
+                      <div class="overflow-x-auto">
+                        <table class="w-full text-xs">
+                          <thead>
+                            <tr class="border-b border-border-subtle">
+                              <th class="text-left py-2 px-3 text-text-muted font-semibold">Nombre</th>
+                              <th class="text-left py-2 px-3 text-text-muted font-semibold">Email</th>
+                              {event.customFields?.map((f) => (
+                                <th class="text-left py-2 px-3 text-text-muted font-semibold">{f.label}</th>
+                              ))}
+                              <th class="text-left py-2 px-3 text-text-muted font-semibold">Notas</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {inscriptions[event.id].map((ins) => (
+                              <tr class="border-b border-border-subtle/50 hover:bg-surface-elevated/50 transition-colors">
+                                <td class="py-2.5 px-3">
+                                  <div class="flex items-center gap-2">
+                                    {ins.avatar ? (
+                                      <img src={ins.avatar} alt="" class="w-6 h-6 rounded-full object-cover" />
+                                    ) : (
+                                      <div class="w-6 h-6 rounded-full bg-brand-violet/20 flex items-center justify-center text-brand-violet-light text-[10px] font-bold">
+                                        {ins.displayName?.charAt(0)?.toUpperCase()}
+                                      </div>
+                                    )}
+                                    <span class="text-text-primary font-medium">{ins.displayName}</span>
+                                  </div>
+                                </td>
+                                <td class="py-2.5 px-3 text-text-secondary">{ins.email}</td>
+                                {event.customFields?.map((f) => (
+                                  <td class="py-2.5 px-3 text-text-secondary">{ins.customData?.[f.name] ?? '-'}</td>
                                 ))}
-                              </div>
-                            )}
-                            {ins.notes && <p class="text-text-muted text-[10px] italic mt-0.5">{ins.notes}</p>}
-                          </div>
-                        </div>
-                      ))}
+                                <td class="py-2.5 px-3 text-text-muted italic">{ins.notes || '-'}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
                     </div>
                   )}
                 </div>
