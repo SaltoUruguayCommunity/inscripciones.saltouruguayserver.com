@@ -34,8 +34,8 @@ const eventsWithCounts = await Promise.all(
   })
 );
 
-const openEvents = eventsWithCounts.filter(e => e.status === 'open' || e.status === 'upcoming');
-const otherEvents = eventsWithCounts.filter(e => e.status !== 'open' && e.status !== 'upcoming');
+const openEvents = eventsWithCounts.filter(e => e.status === 'open');
+const otherEvents = eventsWithCounts.filter(e => e.status !== 'open');
 ---
 
 <Layout title="Incripciones — Salto Uruguay">

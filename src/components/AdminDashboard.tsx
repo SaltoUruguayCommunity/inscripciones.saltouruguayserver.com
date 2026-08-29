@@ -253,6 +253,30 @@ export default function AdminDashboard({ events: initialEvents, totalInscription
     }
   };
 
+  const handleDeleteInscription = async (eventId: number, inscriptionId: number) => {
+    if (!confirm("¿Eliminar esta inscripción?")) return;
+    try {
+      const res = await fetch("/api/inscriptions/delete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ inscriptionId }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setInscriptions({
+          ...inscriptions,
+          [eventId]: inscriptions[eventId].filter((ins) => ins.id !== inscriptionId),
+        });
+        setEvents(events.map((e) => (e.id === eventId ? { ...e, inscriptionCount: e.inscriptionCount - 1 } : e)));
+        setMessage({ type: "success", text: "Inscripción eliminada" });
+      } else {
+        setMessage({ type: "error", text: data.error || "Error al eliminar" });
+      }
+    } catch {
+      setMessage({ type: "error", text: "Error al eliminar inscripción" });
+    }
+  };
+
   useEffect(() => {
     if (message) {
       const timer = setTimeout(() => setMessage(null), 3000);
@@ -518,6 +542,7 @@ export default function AdminDashboard({ events: initialEvents, totalInscription
                               {event.customFields?.map((f) => (
                                 <th class="text-left py-2 px-3 text-text-muted font-semibold">{f.label}</th>
                               ))}
+                              <th class="text-right py-2 px-3 text-text-muted font-semibold">Acciones</th>
                             </tr>
                           </thead>
                           <tbody>
@@ -540,6 +565,9 @@ export default function AdminDashboard({ events: initialEvents, totalInscription
                                 {event.customFields?.map((f) => (
                                   <td class="py-2.5 px-3 text-text-secondary">{ins.customData?.[f.name] ?? '-'}</td>
                                 ))}
+                                <td class="py-2.5 px-3 text-right">
+                                  <button onClick={() => handleDeleteInscription(event.id, ins.id)} class="text-text-muted hover:text-brand-rose text-xs transition-colors cursor-pointer bg-transparent border-none">Eliminar</button>
+                                </td>
                               </tr>
                             ))}
                           </tbody>

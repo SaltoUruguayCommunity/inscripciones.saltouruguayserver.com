@@ -53,7 +53,7 @@ const statusConfig: Record<string, { label: string; class: string }> = {
 
 const statusInfo = statusConfig[event.status] || statusConfig.upcoming;
 const customFields = (event.customFields as any[]) || [];
-const canInscribe = user && (event.status === 'open' || event.status === 'upcoming') && !userInscription && (!event.requireDiscord || Boolean((user as any).discordId));
+const canInscribe = user && event.status === 'open' && !userInscription && (!event.requireDiscord || Boolean((user as any).discordId));
 ---
 
 <Layout title={`${event.title} — Inscripciones`}>
@@ -161,7 +161,7 @@ const canInscribe = user && (event.status === 'open' || event.status === 'upcomi
                 </div>
               )}
             </div>
-          ) : event.status === 'closed' || event.status === 'finished' ? (
+          ) : event.status === 'upcoming' || event.status === 'closed' || event.status === 'finished' ? (
             <div class="text-center py-4">
               <p class="text-text-muted text-sm">Las inscripciones están cerradas</p>
             </div>
