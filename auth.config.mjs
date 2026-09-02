@@ -96,6 +96,7 @@ export default defineConfig({
           session.user = {
             ...session.user,
             id: user.id,
+            susId: user.susId,
             username: user.username,
             discordId: user.discordId,
             discordUsername: user.discordUsername,

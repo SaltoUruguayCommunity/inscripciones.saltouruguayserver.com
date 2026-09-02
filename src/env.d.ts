@@ -5,6 +5,7 @@ declare module "@auth/core/types" {
   interface Session extends AuthSession {
     user: {
       id: number;
+      susId: number;
       username: string;
       discordId: string | null;
       discordUsername: string | null;
