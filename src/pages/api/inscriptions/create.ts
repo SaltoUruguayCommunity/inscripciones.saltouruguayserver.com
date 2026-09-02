@@ -29,7 +29,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
     }
 
     if (event.requireDiscord) {
-      const freshDiscord = await getUserDiscordInfo(user.id);
+      const freshDiscord = await getUserDiscordInfo(user.susId);
 
       if (!freshDiscord.discordId) {
         return new Response(

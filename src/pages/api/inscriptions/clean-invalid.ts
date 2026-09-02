@@ -28,16 +28,17 @@ export const POST: APIRoute = async ({ locals }) => {
       const inscriptions = await client
         .select({
           id: InscriptionsTable.id,
-          userId: InscriptionsTable.userId,
+          susId: UsersTable.susId,
         })
         .from(InscriptionsTable)
+        .innerJoin(UsersTable, eq(InscriptionsTable.userId, UsersTable.id))
         .where(eq(InscriptionsTable.eventId, event.id))
         .all();
 
       for (const ins of inscriptions) {
         totalChecked++;
         try {
-          const discordInfo = await getUserDiscordInfo(ins.userId);
+          const discordInfo = await getUserDiscordInfo(ins.susId);
 
           if (!discordInfo.discordId) {
             await client.delete(InscriptionsTable).where(eq(InscriptionsTable.id, ins.id)).run();
