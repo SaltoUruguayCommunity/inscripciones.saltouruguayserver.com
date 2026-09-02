@@ -1,7 +1,8 @@
 import type { APIRoute } from 'astro';
 import { client } from '../../../db';
-import { InscriptionsTable } from '../../../db/schema';
+import { InscriptionsTable, EventsTable } from '../../../db/schema';
 import { eq } from 'drizzle-orm';
+import { isDiscordMember, getUserDiscordInfo } from '../../../lib/discord';
 
 export const POST: APIRoute = async ({ request, locals }) => {
   const user = locals.user;
@@ -15,6 +16,35 @@ export const POST: APIRoute = async ({ request, locals }) => {
 
     if (!eventId) {
       return new Response(JSON.stringify({ success: false, error: 'eventId requerido' }), { status: 400 });
+    }
+
+    const event = await client
+      .select()
+      .from(EventsTable)
+      .where(eq(EventsTable.id, eventId))
+      .get();
+
+    if (!event) {
+      return new Response(JSON.stringify({ success: false, error: 'Evento no encontrado' }), { status: 404 });
+    }
+
+    if (event.requireDiscord) {
+      const freshDiscord = await getUserDiscordInfo(user.id);
+
+      if (!freshDiscord.discordId) {
+        return new Response(
+          JSON.stringify({ success: false, error: 'Debes vincular tu cuenta de Discord en saltouruguayserver.com/usuario' }),
+          { status: 403 }
+        );
+      }
+
+      const member = await isDiscordMember(freshDiscord.discordId);
+      if (!member) {
+        return new Response(
+          JSON.stringify({ success: false, error: 'Debes ser miembro del servidor de Discord de SaltoUruguayServer' }),
+          { status: 403 }
+        );
+      }
     }
 
     const alreadyInscribed = await client

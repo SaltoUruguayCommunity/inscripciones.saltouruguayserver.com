@@ -6,6 +6,8 @@ declare module "@auth/core/types" {
     user: {
       id: number;
       username: string;
+      discordId: string | null;
+      discordUsername: string | null;
       is_admin?: boolean;
     } & DefaultSession["user"];
   }

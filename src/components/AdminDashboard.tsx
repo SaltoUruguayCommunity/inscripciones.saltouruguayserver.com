@@ -41,6 +41,7 @@ export default function AdminDashboard({ events: initialEvents, totalInscription
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [cleaningInvalid, setCleaningInvalid] = useState(false);
 
   const [expandedEventId, setExpandedEventId] = useState<number | null>(null);
   const [inscriptions, setInscriptions] = useState<Record<number, any[]>>({});
@@ -284,6 +285,26 @@ export default function AdminDashboard({ events: initialEvents, totalInscription
     }
   }, [message]);
 
+  const handleCleanInvalid = async () => {
+    if (!confirm("¿Eliminar inscripciones de usuarios sin Discord vinculado o que ya no son miembros del servidor?")) return;
+    setCleaningInvalid(true);
+    try {
+      const res = await fetch("/api/inscriptions/clean-invalid", { method: "POST" });
+      const data = await res.json();
+      if (data.success) {
+        setMessage({ type: "success", text: `Revisadas ${data.checked} inscripciones, ${data.deleted} eliminadas` });
+        setExpandedEventId(null);
+        setInscriptions({});
+      } else {
+        setMessage({ type: "error", text: data.error || "Error al limpiar" });
+      }
+    } catch {
+      setMessage({ type: "error", text: "Error de conexión" });
+    } finally {
+      setCleaningInvalid(false);
+    }
+  };
+
   const inputClass = "w-full px-4 py-2.5 bg-surface-elevated border border-border-subtle rounded-xl text-text-primary text-sm focus:outline-none focus:border-brand-violet transition-colors";
   const labelClass = "block text-text-muted text-xs font-semibold mb-1.5";
 
@@ -319,9 +340,14 @@ export default function AdminDashboard({ events: initialEvents, totalInscription
       {/* Actions Bar */}
       <div class="flex items-center justify-between mb-6">
         <h2 class="font-[family-name:var(--font-anton)] text-xl uppercase tracking-wide text-text-primary">Eventos</h2>
-        <button onClick={() => { resetForm(); setShowForm(!showForm); }} class="btn-primary !text-sm !py-2 !px-4">
-          {showForm ? "Cancelar" : "+ Nuevo Evento"}
-        </button>
+        <div class="flex items-center gap-2">
+          <button onClick={handleCleanInvalid} disabled={cleaningInvalid} class="text-xs text-text-muted hover:text-brand-rose border border-border-subtle hover:border-brand-rose/50 rounded-lg px-3 py-2 cursor-pointer bg-transparent transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+            {cleaningInvalid ? "Limpiando..." : "Limpiar inscripciones inválidas"}
+          </button>
+          <button onClick={() => { resetForm(); setShowForm(!showForm); }} class="btn-primary !text-sm !py-2 !px-4">
+            {showForm ? "Cancelar" : "+ Nuevo Evento"}
+          </button>
+        </div>
       </div>
 
       {/* Form */}
