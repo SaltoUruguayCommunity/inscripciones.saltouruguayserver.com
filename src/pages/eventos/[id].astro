@@ -3,6 +3,7 @@ import Layout from '../../layouts/Layout.astro';
 import { client } from '../../db';
 import { EventsTable, InscriptionsTable, UsersTable } from '../../db/schema';
 import { eq, sql } from 'drizzle-orm';
+import { getUserDiscordInfo } from '../../lib/discord';
 
 export const prerender = false;
 
@@ -39,6 +40,23 @@ if (user) {
     .then((inscriptions) => inscriptions.find((i) => i.eventId === Number(id)));
 }
 
+let effectiveDiscordId = user ? (user as any).discordId : null;
+if (user && event.requireDiscord && !effectiveDiscordId) {
+  try {
+    const freshDiscord = await getUserDiscordInfo((user as any).susId);
+    if (freshDiscord.discordId) {
+      effectiveDiscordId = freshDiscord.discordId;
+      await client
+        .update(UsersTable)
+        .set({ discordId: freshDiscord.discordId, discordUsername: freshDiscord.discordUsername })
+        .where(eq(UsersTable.id, user.id))
+        .run();
+    }
+  } catch (e) {
+    console.error("Failed to fetch fresh Discord info:", e);
+  }
+}
+
 const formattedDate = event.eventDate
   ? new Date(event.eventDate).toLocaleDateString("es-UY", { weekday: "long", day: "numeric", month: "long", year: "numeric" })
   : null;
@@ -53,7 +71,7 @@ const statusConfig: Record<string, { label: string; class: string }> = {
 
 const statusInfo = statusConfig[event.status] || statusConfig.upcoming;
 const customFields = (event.customFields as any[]) || [];
-const canInscribe = user && event.status === 'open' && !userInscription && (!event.requireDiscord || Boolean((user as any).discordId));
+const canInscribe = user && event.status === 'open' && !userInscription && (!event.requireDiscord || Boolean(effectiveDiscordId));
 ---
 
 <Layout title={`${event.title} — Inscripciones`}>
@@ -183,7 +201,7 @@ const canInscribe = user && event.status === 'open' && !userInscription && (!eve
                 </div>
               </div>
 
-              {event.requireDiscord && !(user as any).discordId && (
+              {event.requireDiscord && !effectiveDiscordId && (
                 <div class="text-center py-4 space-y-3 border border-indigo-500/20 rounded-xl bg-indigo-500/5">
                   <p class="text-text-primary text-sm font-medium">Discord vinculado requerido</p>
                   <p class="text-text-muted text-xs max-w-xs mx-auto">
