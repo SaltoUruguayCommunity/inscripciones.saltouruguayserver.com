@@ -28,6 +28,7 @@ export default defineConfig({
       TURSO_DATABASE_URL: envField.string({ context: 'server', access: 'secret' }),
       TURSO_AUTH_TOKEN: envField.string({ context: 'server', access: 'secret' }),
       IMGBB_API_KEY: envField.string({ context: 'server', access: 'secret' }),
+      INSCRIPTIONS_API_KEY: envField.string({ context: 'server', access: 'secret' }),
         },
     },
 
