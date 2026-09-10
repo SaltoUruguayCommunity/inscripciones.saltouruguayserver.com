@@ -14,7 +14,6 @@ export const GET: APIRoute = async ({ url, request }) => {
   }
 
   const eventId = url.searchParams.get('eventId') || '3';
-  const dryRun = url.searchParams.get('dryRun') === 'true';
 
   try {
     const inscriptions = await client
@@ -34,33 +33,6 @@ export const GET: APIRoute = async ({ url, request }) => {
       .innerJoin(UsersTable, eq(InscriptionsTable.userId, UsersTable.id))
       .where(eq(InscriptionsTable.eventId, Number(eventId)))
       .all();
-
-    if (dryRun) {
-      // Return preview with mapped fields
-      const preview = inscriptions.map((insc) => {
-        const custom = insc.customData || {};
-        return {
-          adminId: insc.id,
-          userId: insc.susId,
-          displayName: insc.displayName,
-          email: insc.email,
-          discordUsername: insc.discordUsername,
-          minecraft_username: custom.minecraft_username || null,
-          participated_sc: custom.participated_sc || null,
-          instagram: custom.instagram || null,
-          createdAt: insc.createdAt,
-        };
-      });
-
-      return new Response(
-        JSON.stringify({
-          success: true,
-          total: preview.length,
-          inscriptions: preview,
-        }),
-        { status: 200 }
-      );
-    }
 
     return new Response(
       JSON.stringify({ success: true, inscriptions }),
