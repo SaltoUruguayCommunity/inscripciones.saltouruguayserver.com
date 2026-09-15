@@ -1,7 +1,7 @@
 import type { APIRoute } from 'astro';
 import { client } from '../../../db';
 import { UsersTable } from '../../../db/schema';
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import { getUserDiscordInfo } from '../../../lib/discord';
 
 export const POST: APIRoute = async ({ locals }) => {
@@ -11,7 +11,16 @@ export const POST: APIRoute = async ({ locals }) => {
   }
 
   try {
-    const users = await client.select().from(UsersTable).all();
+    const users = await client
+      .select()
+      .from(UsersTable)
+      .where(sql`${UsersTable.discordId} IS NULL`)
+      .all();
+
+    if (users.length === 0) {
+      return new Response(JSON.stringify({ success: true, total: 0, synced: 0, updated: 0, errors: 0 }), { status: 200 });
+    }
+
     let synced = 0;
     let updated = 0;
     let errors = 0;
