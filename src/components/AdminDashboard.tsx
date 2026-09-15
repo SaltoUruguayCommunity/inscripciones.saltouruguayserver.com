@@ -42,6 +42,7 @@ export default function AdminDashboard({ events: initialEvents, totalInscription
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [cleaningInvalid, setCleaningInvalid] = useState(false);
+  const [syncingDiscord, setSyncingDiscord] = useState(false);
 
   const [expandedEventId, setExpandedEventId] = useState<number | null>(null);
   const [inscriptions, setInscriptions] = useState<Record<number, any[]>>({});
@@ -285,6 +286,24 @@ export default function AdminDashboard({ events: initialEvents, totalInscription
     }
   }, [message]);
 
+  const handleSyncDiscord = async () => {
+    if (!confirm("¿Sincronizar los datos de Discord de todos los usuarios desde la web principal? Esto puede tardar varios minutos.")) return;
+    setSyncingDiscord(true);
+    try {
+      const res = await fetch("/api/users/sync-discord", { method: "POST" });
+      const data = await res.json();
+      if (data.success) {
+        setMessage({ type: "success", text: `Sincronizados ${data.synced} usuarios, ${data.updated} actualizados, ${data.errors} errores` });
+      } else {
+        setMessage({ type: "error", text: data.error || "Error al sincronizar" });
+      }
+    } catch {
+      setMessage({ type: "error", text: "Error de conexión" });
+    } finally {
+      setSyncingDiscord(false);
+    }
+  };
+
   const handleCleanInvalid = async () => {
     if (!confirm("¿Eliminar inscripciones de usuarios sin Discord vinculado o que ya no son miembros del servidor?")) return;
     setCleaningInvalid(true);
@@ -341,6 +360,9 @@ export default function AdminDashboard({ events: initialEvents, totalInscription
       <div class="flex items-center justify-between mb-6">
         <h2 class="font-[family-name:var(--font-anton)] text-xl uppercase tracking-wide text-text-primary">Eventos</h2>
         <div class="flex items-center gap-2">
+          <button onClick={handleSyncDiscord} disabled={syncingDiscord} class="text-xs text-text-muted hover:text-brand-cyan border border-border-subtle hover:border-brand-cyan/50 rounded-lg px-3 py-2 cursor-pointer bg-transparent transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+            {syncingDiscord ? "Sincronizando..." : "Sincronizar Discords"}
+          </button>
           <button onClick={handleCleanInvalid} disabled={cleaningInvalid} class="text-xs text-text-muted hover:text-brand-rose border border-border-subtle hover:border-brand-rose/50 rounded-lg px-3 py-2 cursor-pointer bg-transparent transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
             {cleaningInvalid ? "Limpiando..." : "Limpiar inscripciones inválidas"}
           </button>

@@ -6,9 +6,11 @@ let cachedToken: { token: string; expiresAt: number } | null = null;
 
 async function getServiceToken(): Promise<string> {
   if (cachedToken && Date.now() < cachedToken.expiresAt) {
+    console.log(`[discord] Using cached service token (expires in ${Math.round((cachedToken.expiresAt - Date.now()) / 1000)}s)`);
     return cachedToken.token;
   }
 
+  console.log(`[discord] Fetching new service token...`);
   const res = await fetch(`${SUS_URL}/oauth/token`, {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -21,6 +23,8 @@ async function getServiceToken(): Promise<string> {
   });
 
   if (!res.ok) {
+    const text = await res.text().catch(() => 'unable to read body');
+    console.error(`[discord] Service token request failed: ${res.status} ${text}`);
     throw new Error("Failed to obtain service token");
   }
 
@@ -29,6 +33,7 @@ async function getServiceToken(): Promise<string> {
     token: data.access_token,
     expiresAt: Date.now() + (data.expires_in - 60) * 1000,
   };
+  console.log(`[discord] Service token obtained, expires in ${data.expires_in}s`);
 
   return cachedToken.token;
 }
@@ -45,11 +50,17 @@ export async function getUserDiscordInfo(userId: number): Promise<DiscordUserInf
     headers: { Authorization: `Bearer ${token}` },
   });
 
+  console.log(`[discord] getUserDiscordInfo(${userId}): status=${res.status}`);
+
   if (!res.ok) {
+    const text = await res.text().catch(() => 'unable to read body');
+    console.error(`[discord] getUserDiscordInfo(${userId}) failed: ${res.status} ${text}`);
     throw new Error("Failed to fetch user Discord info");
   }
 
-  return res.json();
+  const data = await res.json();
+  console.log(`[discord] getUserDiscordInfo(${userId}) response:`, JSON.stringify(data));
+  return data;
 }
 
 export async function isDiscordMember(discordId: string): Promise<boolean> {

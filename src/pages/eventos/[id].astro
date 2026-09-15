@@ -41,9 +41,12 @@ if (user) {
 }
 
 let effectiveDiscordId = user ? (user as any).discordId : null;
+console.log(`[event-page] User ${user?.id}: session discordId=${effectiveDiscordId}, requireDiscord=${event.requireDiscord}`);
 if (user && event.requireDiscord && !effectiveDiscordId) {
   try {
+    console.log(`[event-page] Fetching fresh Discord info for susId=${(user as any).susId}...`);
     const freshDiscord = await getUserDiscordInfo((user as any).susId);
+    console.log(`[event-page] Fresh Discord response:`, JSON.stringify(freshDiscord));
     if (freshDiscord.discordId) {
       effectiveDiscordId = freshDiscord.discordId;
       await client
@@ -51,9 +54,10 @@ if (user && event.requireDiscord && !effectiveDiscordId) {
         .set({ discordId: freshDiscord.discordId, discordUsername: freshDiscord.discordUsername })
         .where(eq(UsersTable.id, user.id))
         .run();
+      console.log(`[event-page] Updated DB with discordId=${freshDiscord.discordId}`);
     }
   } catch (e) {
-    console.error("Failed to fetch fresh Discord info:", e);
+    console.error("[event-page] Failed to fetch fresh Discord info:", e);
   }
 }
 
@@ -202,7 +206,7 @@ const canInscribe = user && event.status === 'open' && !userInscription && (!eve
               </div>
 
               {event.requireDiscord && !effectiveDiscordId && (
-                <div class="text-center py-4 space-y-3 border border-indigo-500/20 rounded-xl bg-indigo-500/5">
+                <div data-discord-required="true" class="text-center py-4 space-y-3 border border-indigo-500/20 rounded-xl bg-indigo-500/5">
                   <p class="text-text-primary text-sm font-medium">Discord vinculado requerido</p>
                   <p class="text-text-muted text-xs max-w-xs mx-auto">
                     Para inscribirte debés vincular tu cuenta de Discord en
@@ -267,6 +271,44 @@ const canInscribe = user && event.status === 'open' && !userInscription && (!eve
   </div>
 
   <script define:vars={{ eventId: event.id }}>
+import { handleSignIn } from "../../lib/auth-client";
+
+document.addEventListener("DOMContentLoaded", () => {
+    const checkDiscord = async () => {
+        const discordBox = document.querySelector('[data-discord-required="true"]');
+        if (!discordBox) {
+            return;
+        }
+
+        const reloginBtn = discordBox.querySelector("#relogin");
+        if (reloginBtn) {
+            reloginBtn.addEventListener("click", (e) => {
+                e.preventDefault();
+                handleSignIn();
+            });
+        }
+
+        try {
+            const res = await fetch("/api/inscriptions/check-discord");
+            if (!res.ok) {
+                return;
+            }
+            const data = await res.json();
+            if (data.discordId) {
+                discordBox.innerHTML = "";
+                discordBox.setAttribute("data-discord-linked", "true");
+                const form = document.getElementById("inscriptionForm");
+                if (form) {
+                    form.style.display = "block";
+                }
+            }
+        } catch {
+            // Silently fail - the user can click "Recargar sesión" manually
+        }
+    };
+
+    checkDiscord();
+
     const form = document.getElementById("inscriptionForm");
     if (form) {
       form.addEventListener("submit", async (e) => {
@@ -318,17 +360,6 @@ const canInscribe = user && event.status === 'open' && !userInscription && (!eve
         }
       });
     }
-  </script>
-
-  <script>
-  import { handleSignIn } from "../../lib/auth-client";
-
-    const reloginBtn = document.getElementById("relogin");
-    if (reloginBtn) {
-      reloginBtn.addEventListener("click", (e) => {
-        e.preventDefault();
-        handleSignIn();
-      });
-    }
-  </script>
+});
+</script>
 </Layout>

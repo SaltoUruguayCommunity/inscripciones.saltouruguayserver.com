@@ -29,7 +29,9 @@ export const POST: APIRoute = async ({ request, locals }) => {
     }
 
     if (event.requireDiscord) {
+      console.log(`[create-inscription] Event ${eventId} requires Discord, checking user ${user.id} (susId=${user.susId})...`);
       const freshDiscord = await getUserDiscordInfo(user.susId);
+      console.log(`[create-inscription] Fresh Discord response:`, JSON.stringify(freshDiscord));
 
       if (!freshDiscord.discordId) {
         return new Response(

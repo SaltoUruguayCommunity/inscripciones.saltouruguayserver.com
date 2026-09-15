@@ -36,6 +36,7 @@ export default defineConfig({
     jwt: async ({ token, account, profile }) => {
       if (account && profile) {
         const susId = Number(profile.sub);
+        console.log(`[auth] JWT callback: susId=${susId}, discordId=${profile.discordId}, discordUsername=${profile.discordUsername}`);
 
         const existingUser = await client
           .select()
