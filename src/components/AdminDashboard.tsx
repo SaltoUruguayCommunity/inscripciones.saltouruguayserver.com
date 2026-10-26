@@ -1,4 +1,5 @@
 import { useState, useEffect } from "preact/hooks";
+import { fieldKey, uniqueFieldKey } from "../lib/custom-fields";
 import type { CustomField } from "../db/schema";
 
 export interface Event {
@@ -58,6 +59,7 @@ export default function AdminDashboard({ events: initialEvents, totalInscription
   const [status, setStatus] = useState("upcoming");
   const [maxParticipants, setMaxParticipants] = useState("");
   const [requireDiscord, setRequireDiscord] = useState(false);
+  const [manualKeys, setManualKeys] = useState<number[]>([]);
   const [customFields, setCustomFields] = useState<CustomField[]>([]);
 
   const handleCoverUpload = async (e: Event) => {
@@ -115,6 +117,7 @@ export default function AdminDashboard({ events: initialEvents, totalInscription
     setMaxParticipants("");
     setRequireDiscord(false);
     setCustomFields([]);
+    setManualKeys([]);
     setEditingEvent(null);
     setShowForm(false);
   };
@@ -131,6 +134,7 @@ export default function AdminDashboard({ events: initialEvents, totalInscription
     setMaxParticipants(event.maxParticipants?.toString() || "");
     setRequireDiscord(event.requireDiscord || false);
     setCustomFields(event.customFields || []);
+    setManualKeys((event.customFields || []).map((_, index) => index));
     setShowForm(true);
   };
 
@@ -144,20 +148,19 @@ export default function AdminDashboard({ events: initialEvents, totalInscription
   const updateCustomField = (index: number, key: keyof CustomField, value: any) => {
     const updated = [...customFields];
     if (key === "name") {
-      value = value.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "");
+      value = fieldKey(value);
+      setManualKeys((keys) => keys.includes(index) ? keys : [...keys, index]);
     }
     updated[index] = { ...updated[index], [key]: value };
-    if (key === "label" && !updated[index].name) {
-      updated[index].name = value
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, "_")
-        .replace(/^_|_$/g, "");
+    if (key === "label" && !manualKeys.includes(index)) {
+      updated[index].name = uniqueFieldKey(value, updated.filter((_, i) => i !== index).map((f) => f.name));
     }
     setCustomFields(updated);
   };
 
   const removeCustomField = (index: number) => {
     setCustomFields(customFields.filter((_, i) => i !== index));
+    setManualKeys((keys) => keys.filter((i) => i !== index).map((i) => i > index ? i - 1 : i));
   };
 
   const handleSubmit = async (e: Event) => {

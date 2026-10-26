@@ -1,3 +1,4 @@
+import { validateCustomFields } from "../../../lib/custom-fields";
 import type { APIRoute } from 'astro';
 import { client } from '../../../db';
 import { EventsTable } from '../../../db/schema';
@@ -16,6 +17,9 @@ export const POST: APIRoute = async ({ request, locals }) => {
     if (!id || !title) {
       return new Response(JSON.stringify({ success: false, error: 'ID y título son obligatorios' }), { status: 400 });
     }
+
+    const fieldsError = validateCustomFields(customFields);
+    if (fieldsError) return Response.json({ success: false, error: fieldsError }, { status: 400 });
 
     await client
       .update(EventsTable)

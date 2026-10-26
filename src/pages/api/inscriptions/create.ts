@@ -1,11 +1,21 @@
 import type { APIRoute } from 'astro';
+import { getBearerUser } from '../../../lib/bearer-user';
 import { client } from '../../../db';
 import { InscriptionsTable, EventsTable } from '../../../db/schema';
 import { eq } from 'drizzle-orm';
 import { isDiscordMember, getUserDiscordInfo } from '../../../lib/discord';
 
 export const POST: APIRoute = async ({ request, locals }) => {
-  const user = locals.user;
+  let user = locals.user;
+  const authorization = request.headers.get('Authorization');
+  if (authorization !== null) {
+    try {
+      user = await getBearerUser(authorization);
+    } catch (error) {
+      console.error('Error validating main-site token:', error);
+      return Response.json({ success: false, error: 'No se pudo validar el token' }, { status: 503 });
+    }
+  }
   if (!user) {
     return new Response(JSON.stringify({ success: false, error: 'Debes iniciar sesión' }), { status: 401 });
   }
