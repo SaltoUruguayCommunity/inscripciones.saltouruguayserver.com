@@ -3,7 +3,7 @@ import { getBearerUser } from './bearer-user';
 import { client } from '../db';
 import { InscriptionsTable, EventsTable, type CustomField } from '../db/schema';
 import { and, eq, sql } from 'drizzle-orm';
-import { isDiscordMember, getUserDiscordInfo } from './discord';
+import { getDiscordStatus } from './registration-eligibility';
 
 export async function createInscription({ request, locals }: Pick<APIContext, "request" | "locals">, routeEventId?: number) {
   let user = locals.user;
@@ -82,19 +82,18 @@ export async function createInscription({ request, locals }: Pick<APIContext, "r
     }
 
     if (event.requireDiscord) {
-      console.log(`[create-inscription] Event ${eventId} requires Discord, checking user ${user.id} (susId=${user.susId})...`);
-      const freshDiscord = await getUserDiscordInfo(user.susId);
-      console.log(`[create-inscription] Fresh Discord response:`, JSON.stringify(freshDiscord));
-
-      if (!freshDiscord.discordId) {
+      const discordStatus = await getDiscordStatus(true, user.susId);
+      if (discordStatus === 'unavailable') {
+        return Response.json({ success: false, error: 'No se pudo verificar Discord. Intentá de nuevo.' }, { status: 503 });
+      }
+      if (discordStatus === 'link_required' || discordStatus === 'sign_in_required') {
         return new Response(
           JSON.stringify({ success: false, error: 'Debes vincular tu cuenta de Discord en saltouruguayserver.com/usuario' }),
           { status: 403 }
         );
       }
 
-      const member = await isDiscordMember(freshDiscord.discordId);
-      if (!member) {
+      if (discordStatus === 'membership_required') {
         return new Response(
           JSON.stringify({ success: false, error: 'Debes ser miembro del servidor de Discord de SaltoUruguayServer' }),
           { status: 403 }

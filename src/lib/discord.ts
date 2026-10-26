@@ -12,6 +12,7 @@ async function getServiceToken(): Promise<string> {
 
   console.log(`[discord] Fetching new service token...`);
   const res = await fetch(`${SUS_URL}/oauth/token`, {
+    signal: AbortSignal.timeout(5000),
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body: new URLSearchParams({
@@ -47,6 +48,7 @@ export async function getUserDiscordInfo(userId: number): Promise<DiscordUserInf
   const token = await getServiceToken();
 
   const res = await fetch(`${SUS_URL}/api/users/${userId}/discord`, {
+    signal: AbortSignal.timeout(5000),
     headers: { Authorization: `Bearer ${token}` },
   });
 
@@ -67,6 +69,7 @@ export async function isDiscordMember(discordId: string): Promise<boolean> {
   const token = await getServiceToken();
 
   const res = await fetch(`${SUS_URL}/api/discord/is-member/${discordId}`, {
+    signal: AbortSignal.timeout(5000),
     headers: { Authorization: `Bearer ${token}` },
   });
 

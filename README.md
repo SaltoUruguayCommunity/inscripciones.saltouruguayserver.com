@@ -57,3 +57,9 @@ Feel free to check [our documentation](https://docs.astro.build) or jump into ou
 `GET /eventos/{id}/inscripciones.json` exige Bearer y devuelve `{ success: true, inscription: null }` si el usuario no está inscrito, o su comprobante (`id`, `eventId`, `status`, `customData`, `createdAt`). No devuelve datos de otros usuarios ni notas administrativas; la respuesta usa `Cache-Control: private, no-store`.
 
 La creación valida estado abierto, campos obligatorios, email, URL y opciones. El límite de cupos y la inserción se resuelven en una sentencia SQLite; duplicados/cierre/falta de cupo devuelven 409.
+
+### Requisitos personalizados del evento
+
+`GET /eventos/{id}.json` acepta Bearer de la web principal o sesión web. Incluye `event.registration`: `canRegister`, `blockedReason`, `requiresDiscordLink`, `requiresDiscordMembership` y `discordStatus`. Si falta Discord, devuelve `discord_link_required`; si está vinculado pero no pertenece al servidor, `discord_membership_required`. Si no se pudo comprobar, devuelve `discord_verification_unavailable` y bloquea la inscripción. La validación se repite en POST. También informa los bloqueos por sesión, inscripción existente, evento cerrado o cupo agotado.
+
+Sin autenticar conserva el detalle público y devuelve `authentication_required`. Un Bearer inválido devuelve 401, sin degradar a anónimo. Las respuestas personalizadas usan `Cache-Control: private, no-store` y `Vary: Authorization, Cookie`.
